@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Home</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="script.js"></script>
+    <style>
+      .admin-section {
+        width: 300px;
+        padding: 20px;
+        background-color: #ffe6e6;
+        border: 2px solid purple;
+        border-radius: 5px;
+        text-align: center;
+        font-family: Arial, sans-serif;
+        margin: 30px auto;
+      }
+
+      .admin-section h2 {
+        margin-top: 0;
+        color: #000;
+        font-size: 18px;
+      }
+
+      .admin-button {
+        background-color: #e53935;
+        color: white;
+        border: none;
+        border-radius: 15px;
+        padding: 10px 20px;
+        margin: 10px 0;
+        cursor: pointer;
+        width: 160px;
+        transition: background-color 0.4s ease;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+      }
+
+      .admin-button:hover {
+        background-color: #b71c1c;
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a href="/" aria-current="index">Home</a>
+      <a href="/page2.html">page 2</a>
+    </nav>
+    <main>
+      <h1>Home page</h1>
+
+      <div class="admin-section">
+        <h2><strong>Sección Administrativa</strong></h2>
+        <button class="admin-button">Modificación de precios</button><br>
+        <a class="admin-button" href="/page2.html">Lista de inscripciones</a>
+      </div>
+
+    </main>
+  </body>
+</html>
+
