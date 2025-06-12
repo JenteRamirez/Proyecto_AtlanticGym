@@ -53,6 +53,20 @@ public class ViewController {
         return "tablaUsuarios";
     }
 
+    @GetMapping("/pagoA")
+    public String pagoAPage() {
+        return "US_PagoA";
+    }
+
+    @GetMapping("/pagoB")
+    public String pagoBPage() {
+        return "US_PagoB";
+    }
+
+    @GetMapping("/pagoC")
+    public String pagoCPage() {
+        return "US_PagoC";
+    }
     // … si tienes más páginas (por ejemplo, US_Anuncios, US_PlanesYPrecios, etc.),
     // solo agrega más @GetMapping que devuelvan el nombre de la plantilla.
 }

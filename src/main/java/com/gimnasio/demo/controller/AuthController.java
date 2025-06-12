@@ -4,6 +4,8 @@ import com.gimnasio.demo.model.Usuario;
 import com.gimnasio.demo.payload.LoginRequest;
 import com.gimnasio.demo.payload.RegisterRequest;
 import com.gimnasio.demo.repository.UsuarioRepository;
+import com.gimnasio.demo.validator.DocumentoValidator;
+
 import org.springframework.http.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +32,14 @@ public class AuthController {
      */
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
+
+        // Validar que el DNI tenga 8 dígitos numéricos
+    if (!DocumentoValidator.esDNIValido(req.getDocumento())) {
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body("DNI inválido: Debe tener exactamente 8 dígitos numéricos.");
+    }
+
         // Verifica si ya existe un usuario con el mismo documento (clave primaria).
         if (repo.existsById(req.getDocumento())) {
             // Si existe, retorna 400 Bad Request con mensaje de error.
@@ -81,4 +91,6 @@ public class AuthController {
         // Credenciales inválidas: retorna 401 Unauthorized.
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
+
+
 }
