@@ -36,15 +36,17 @@
       </a>
       <nav id="navmenu" class="navmenu">
         <ul>
-          <li><a href="US_DatosUsuario.html" class="active">Datos Usuario</a></li>
+          <li><a href="/datos-usuario" class="active">Datos Usuario</a></li>
           <li><a href="/" class="active">Inicio</a></li>
           <li><a href="US_Anuncios.html" class="active">Contenido</a></li>
-          <li><a href="US_PlanesYPrecios.html" class="active">Planes y Precios</a></li>
-          <li><a href="VA_Inicio.html" class="active">Admin</a></li>
+          <li><a href="/planes" class="active">Planes y Precios</a></li>
+          <li><a href="/admin-panel" class="active">Admin</a></li>
         </ul>
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
       </nav>
-      <a class="btn-getstarted" href="/login">Login</a>
+      <a id="btnLogin" class="btn-getstarted" href="/login" style="display: none;">Login</a>
+      <a id="btnLogout" class="btn-getstarted" href="#" onclick="cerrarSesion()" style="display: none;">Cerrar
+        Sesión</a>
     </div>
   </header>
   <!-- ======= End Header ======= -->
@@ -187,50 +189,52 @@
 
   <!-- ===== JavaScript para enviar el JSON a /login ===== -->
   <script>
-  document.getElementById("loginForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
+    document.getElementById("loginForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
 
-    const documento = document.getElementById("documento").value.trim();
-    const password = document.getElementById("password").value;
+      const documento = document.getElementById("documento").value.trim();
+      const password = document.getElementById("password").value;
 
-    const payload = {
-      documento: documento,
-      password: password
-    };
+      const payload = {
+        documento: documento,
+        password: password
+      };
 
-    try {
-      const response = await fetch("/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
+      try {
+        const response = await fetch("/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
 
-      if (response.ok) {
-        const data = await response.json(); // <-- AHORA PARSEAMOS LA RESPUESTA JSON
-        if (data && data.dni) { // <-- VERIFICAMOS SI EL JSON CONTIENE EL 'dni'
-          // Login OK, redirige a US_Usuarios.html pasando el DNI en la URL (¡INSEGURO!)
-          // Asegúrate que US_Usuarios.html exista en la misma carpeta o ruta accesible
-          window.location.href = "/US_DatosUsuario.html?dni=" + encodeURIComponent(data.dni);
+        if (response.ok) {
+          const data = await response.json(); // Parseamos la respuesta JSON
+          if (data && data.dni && data.rango) { // Verificamos que tenga dni y rango
+            localStorage.setItem("dniUsuario", data.dni);
+            localStorage.setItem("rangoUsuario", data.rango); // <-- Esta línea es clave
+            window.location.href = "/"; // Redirige a la página protegida
+          } else {
+            alert("Login exitoso, pero no se pudo obtener toda la información del usuario.");
+            window.location.href = "/";
+          }
+        } else if (response.status === 401) {
+          alert("Credenciales inválidas. Verifica tu documento y contraseña.");
         } else {
-          // Si por alguna razón el backend no devolvió el DNI esperado
-          alert("Login exitoso, pero no se pudo obtener la información del DNI.");
-          window.location.href = "/"; // Redirige a inicio o muestra un error específico
+          const errorText = await response.text();
+          alert("Error: " + errorText);
         }
-      } else if (response.status === 401) {
-        alert("Credenciales inválidas. Verifica tu documento y contraseña.");
-      } else {
-        const errorText = await response.text();
-        alert("Error: " + errorText);
+      } catch (error) {
+        console.error("Error de conexión al llamar a /login:", error);
+        alert("Ocurrió un error en la conexión.");
       }
-    } catch (error) {
-      console.error("Error de conexión al llamar a /login:", error);
-      alert("Ocurrió un error en la conexión.");
-    }
-  });
-</script>
+    });
+  </script>
+
   <!-- ===== Fin del script ===== -->
+  <script src="assets/js/session.js"></script>
+
 </body>
 
 </html>

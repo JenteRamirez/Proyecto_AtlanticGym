@@ -1,11 +1,18 @@
 // src/main/java/com/gimnasio/demo/controller/ViewController.java
 package com.gimnasio.demo.controller;
 
+import com.gimnasio.demo.model.Plan;
 import com.gimnasio.demo.model.Usuario;
 import com.gimnasio.demo.repository.UsuarioRepository;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
@@ -53,25 +60,46 @@ public class ViewController {
         return "tablaUsuarios";
     }
 
-    @GetMapping("/pagoA")
-    public String pagoAPage() {
-        return "US_PagoA";
-    }
-
-    @GetMapping("/pagoB")
+    @GetMapping("/pago2")
     public String pagoBPage() {
         return "US_PagoB";
     }
 
-    @GetMapping("/pagoC")
+    @GetMapping("/pago3")
     public String pagoCPage() {
         return "US_PagoC";
     }
 
-    @GetMapping("/datosbd")
-    public String datosbd() {
-        return "US_DatosUsuario";
+    @GetMapping("/datos-usuario")
+    public String datosUsuario() {
+        return "US_DatosUsuario"; // sin .html
     }
+
+    @GetMapping("/precios")
+    public String mostrarPrecios() {
+        return "VA_Precios"; // sin .html, Spring buscará en templates/VA_Precios.html
+    }
+
+    @GetMapping("/planes")
+    public String planes() {
+        return "US_PlanesYPrecios";
+    }
+
+    @GetMapping("/pago1")
+    public String pagoAPage() {
+        return "US_PagoA";
+    }
+
+    @GetMapping("/suscripciones")
+    public String vistaSuscripciones() {
+        return "VA_Suscripciones";
+    }
+
+    @GetMapping("/admin-panel")
+    public String mostrarPanelAdmin() {
+        return "VA_Inicio"; // corresponde a templates/miVistaAdmin.html
+    }
+
     // … si tienes más páginas (por ejemplo, US_Anuncios, US_PlanesYPrecios, etc.),
     // solo agrega más @GetMapping que devuelvan el nombre de la plantilla.
 }
