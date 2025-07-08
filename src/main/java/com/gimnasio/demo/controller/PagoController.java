@@ -2,17 +2,38 @@ package com.gimnasio.demo.controller;
 
 import com.gimnasio.demo.model.Boleta;
 import com.gimnasio.demo.model.Plan;
+import com.gimnasio.demo.model.Usuario;
 import com.gimnasio.demo.payload.PagoRequest;
 import com.gimnasio.demo.repository.BoletaRepository;
 import com.gimnasio.demo.repository.PlanRepository;
-import jakarta.validation.Valid;
+import com.gimnasio.demo.repository.UsuarioRepository;
+import com.gimnasio.demo.util.BoletaUtils;
+import com.gimnasio.demo.util.PdfGeneratorUtil;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.Date;
-import java.util.Optional;
+import java.util.List;
+
+/**
+ * Controlador encargado de procesar pagos de planes de gimnasio por parte de los usuarios.
+ *
+ * Funciones principales:
+ * - Registrar un nuevo pago validando que no haya uno activo.
+ * - Generar un comprobante de pago en formato PDF.
+ *
+ * Dependencias del pom utilizadas:
+ * - spring-boot-starter-web → para exponer el endpoint REST.
+ * - spring-boot-starter-data-jpa → para operaciones CRUD con Boleta, Usuario y Plan.
+ * - itextpdf → para generar el PDF de la boleta de pago.
+ *
+ * Relaciones:
+ * - Usa los repositorios BoletaRepository, PlanRepository y UsuarioRepository.
+ * - Utiliza utilidades de negocio como BoletaUtils y PdfGeneratorUtil.
+ */
 
 @RestController
 @RequestMapping("/api/pagos")
@@ -24,35 +45,52 @@ public class PagoController {
     @Autowired
     private PlanRepository planRepository;
 
-    // ========== REGISTRAR PAGO ==========
-    @PostMapping
-    public ResponseEntity<?> registrarPago(@Valid @RequestBody PagoRequest request) {
-        try {
-            // 1. Buscar el plan por ID
-            Optional<Plan> planOptional = planRepository.findById(request.getIdPlan());
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
-            if (planOptional.isEmpty()) {
-                return ResponseEntity.badRequest().body("El plan con ID " + request.getIdPlan() + " no existe.");
-            }
+    /**
+     * Registra un pago si el usuario no tiene un plan activo
+     * y genera un PDF como comprobante del pago.
+     */
+    @PostMapping("/pago-pdf")
+    public ResponseEntity<?> registrarPagoConPDF(@RequestBody PagoRequest request) {
+        // Buscar usuario y plan
+        Usuario usuario = usuarioRepository.findById(request.getDocumento()).orElse(null);
+        Plan plan = planRepository.findById(request.getIdPlan()).orElse(null);
 
-            Plan plan = planOptional.get();
-
-            // 2. Crear y llenar la boleta
-            Boleta boleta = new Boleta();
-            boleta.setDocumentoUsuario(request.getDocumento());
-            boleta.setPlan(plan);
-            boleta.setFechaEmision(new Date());
-            boleta.setMontoTotal(BigDecimal.valueOf(plan.getPrecio())); // 🔥 AQUI SE CORRIGE
-
-            // 3. Guardar en la base de datos
-            boletaRepository.save(boleta);
-
-            return ResponseEntity.ok("Pago registrado exitosamente.");
-
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Error al registrar el pago: " + e.getMessage());
+        if (usuario == null || plan == null) {
+            return ResponseEntity.status(404).body("Usuario o plan no encontrado");
         }
+
+        // Verificar si ya tiene un plan activo
+        List<Boleta> boletasUsuario = boletaRepository.findByDocumentoUsuario(usuario.getDocumento());
+        Date ahora = new Date();
+
+        for (Boleta b : boletasUsuario) {
+            Date vencimiento = BoletaUtils.calcularFechaVencimiento(b.getFechaEmision(),
+                    b.getPlan().getDuracionMeses());
+
+            if (vencimiento.after(ahora)) {
+                return ResponseEntity.badRequest()
+                        .body("Ya tienes un plan activo hasta el " + vencimiento);
+            }
+        }
+
+        // Crear nueva boleta
+        Boleta boleta = new Boleta();
+        boleta.setDocumentoUsuario(usuario.getDocumento());
+        boleta.setPlan(plan);
+        boleta.setMontoTotal(BigDecimal.valueOf(plan.getPrecio()));
+        boleta.setFechaEmision(ahora);
+        boletaRepository.save(boleta);
+
+        // Generar PDF con datos del pago
+        byte[] pdfBytes = PdfGeneratorUtil.generarPDFBoleta(boleta);
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=boleta.pdf")
+                .header("Content-Type", "application/pdf")
+                .body(pdfBytes);
     }
 }
-
 

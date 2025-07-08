@@ -1,33 +1,34 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<html lang="es">
 
 <head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>Suscripciones - Boletas</title>
+  <meta charset="UTF-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Resumen de Pagos</title>
   <meta name="description" content="">
   <meta name="keywords" content="">
-  <link href="assets/img/favicon.png" rel="icon">
-  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com" rel="preconnect">
-  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="assets/img/favicon.png" rel="icon" />
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin />
   <link
     href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Poppins:wght@300;400;600&family=Raleway:wght@300;400;600&display=swap"
-    rel="stylesheet">
-  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
-  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
-  <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
-  <link href="assets/css/main.css" rel="stylesheet">
+    rel="stylesheet" />
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet" />
+  <link href="assets/vendor/aos/aos.css" rel="stylesheet" />
+  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet" />
+  <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet" />
+  <link href="assets/css/main.css" rel="stylesheet" />
+
 </head>
 
 <body class="index-page">
   <header id="header" class="header d-flex align-items-center sticky-top">
     <div class="container-fluid container-xl position-relative d-flex align-items-center">
       <a href="/" class="logo d-flex align-items-center me-auto">
-        <img src="imgWeb/logo.png" alt="">
+        <img src="imgWeb/logo.png" alt="" />
       </a>
       <nav id="navmenu" class="navmenu">
         <ul>
@@ -49,13 +50,13 @@
   <main class="main">
     <div class="page-title light-background">
       <div class="container d-lg-flex justify-content-between align-items-center">
-        <h1 class="mb-2 mb-lg-0">Suscripciones</h1>
+        <h1 class="mb-2 mb-lg-0">Resumen de Pagos</h1>
         <nav class="breadcrumbs">
           <ol>
             <li><a href="/TablaUsuarios">Administrar Usuarios</a></li>
             <li><a href="/precios">Administrar Precios</a></li>
-            <li><a href="/suscripciones" class="active">Suscripciones</a></li>
-            <li><a href="/VistaSuscripciones">ResumenSuscripciones</a></li>
+            <li><a href="/suscripciones">Suscripciones</a></li>
+            <li><a href="/VistaSuscripciones" class="active">ResumenSuscripciones</a></li>
             <li><a href="/eventosAdmin">Eventos</a></li>
             <li><a href="/asistencias">Asistencias</a></li>
           </ol>
@@ -65,30 +66,20 @@
 
     <section class="section">
       <div class="container">
-        <h2 class="mb-4 text-center">📄 Resumen de Suscripciones</h2>
+        <h2 class="mb-4 text-center">📄 Resumen de Boletas por Usuario</h2>
         <div class="table-responsive">
-          <table class="table table-striped table-bordered align-middle">
-            <thead class="table-dark text-center">
+          <table class="table table-bordered table-hover text-center">
+            <thead class="table-dark">
               <tr>
-                <th>ID Boleta</th>
-                <th>Documento</th>
-                <th>ID Plan</th>
-                <th>Nombre del Plan</th>
-                <th>Fecha</th>
-                <th>Monto</th>
-                <th>Acción</th>
+                <th>DNI</th>
+                <th>Total Gastado (S/)</th>
+                <th>Cantidad de Pagos</th>
               </tr>
             </thead>
-            <tbody id="tabla-boletas" class="text-center">
-              <!-- Boletas dinámicamente -->
+            <tbody id="tablaResumen">
+              <!-- Datos dinámicos -->
             </tbody>
           </table>
-        </div>
-
-        <div class="text-end mt-3">
-          <a href="/api/boletas/exportar" class="btn btn-success">
-            📥 Exportar a Excel
-          </a>
         </div>
       </div>
     </section>
@@ -137,65 +128,38 @@
     </div>
   </footer>
 
-  <!-- JS scripts -->
   <script>
-    async function cargarBoletas() {
+    document.addEventListener("DOMContentLoaded", async () => {
       try {
-        const response = await fetch("/api/boletas");
-        if (!response.ok) throw new Error("Error al obtener las boletas");
+        const res = await fetch("/api/boletas/agrupadas/resumen");
+        if (!res.ok) throw new Error("No se pudo obtener el resumen.");
 
-        const boletas = await response.json();
-        const tabla = document.getElementById("tabla-boletas");
-        tabla.innerHTML = "";
+        const data = await res.json();
+        const tabla = document.getElementById("tablaResumen");
 
-        boletas.forEach(boleta => {
+        if (data.length === 0) {
+          tabla.innerHTML = `<tr><td colspan="3">No hay datos para mostrar.</td></tr>`;
+          return;
+        }
+
+        data.forEach(item => {
           const fila = document.createElement("tr");
           fila.innerHTML = `
-            <td>${boleta.idBoleta}</td>
-            <td>${boleta.documentoUsuario}</td>
-            <td>${boleta.plan.idPlan}</td>
-            <td>${boleta.plan.nombre}</td>
-            <td>${new Date(boleta.fechaEmision).toLocaleString()}</td>
-            <td>S/. ${boleta.montoTotal.toFixed(2)}</td>
-            <td>
-              <button class="btn btn-danger btn-sm" onclick="eliminarBoleta(${boleta.idBoleta})">Eliminar</button>
-            </td>`;
+            <td>${item.documento}</td>
+            <td>S/ ${item.totalGastado.toFixed(2)}</td>
+            <td>${item.cantidadPagos}</td>
+          `;
           tabla.appendChild(fila);
         });
+
       } catch (err) {
-        console.error("Error:", err);
-        alert("No se pudieron cargar las boletas.");
+        alert("⚠️ Error al cargar el resumen.");
+        console.error(err);
       }
-    }
-
-    async function eliminarBoleta(idBoleta) {
-      if (!confirm("¿Seguro que deseas eliminar esta boleta?")) return;
-      try {
-        const response = await fetch(`/api/boletas/${idBoleta}`, { method: "DELETE" });
-        if (response.ok) {
-          alert("Boleta eliminada correctamente.");
-          cargarBoletas();
-        } else {
-          const msg = await response.text();
-          alert("Error al eliminar boleta: " + msg);
-        }
-      } catch (err) {
-        console.error("Error:", err);
-        alert("No se pudo eliminar la boleta.");
-      }
-    }
-
-    const dniUsuario = localStorage.getItem("dniUsuario");
-    if (!dniUsuario) {
-      alert("No has iniciado sesión. Redirigiendo al login.");
-      window.location.href = "/login";
-    }
-
-    window.addEventListener("DOMContentLoaded", cargarBoletas);
+    });
   </script>
 
   <script src="assets/js/session.js"></script>
-  <script src="assets/js/adminOnly.js"></script>
 </body>
 
 </html>

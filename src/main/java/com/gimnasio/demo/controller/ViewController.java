@@ -1,63 +1,61 @@
-// src/main/java/com/gimnasio/demo/controller/ViewController.java
 package com.gimnasio.demo.controller;
 
-import com.gimnasio.demo.model.Plan;
-import com.gimnasio.demo.model.Usuario;
-import com.gimnasio.demo.repository.UsuarioRepository;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.List;
+/**
+ * Controlador de vistas encargado de enrutar las URLs hacia las plantillas HTML
+ * ubicadas en la carpeta `src/main/resources/templates`.
+ *
+ * Este controlador se encarga únicamente de redirigir a páginas estáticas o 
+ * Thymeleaf sin lógica de backend.
+ *
+ * Dependencias del pom utilizadas:
+ * - spring-boot-starter-thymeleaf → para el procesamiento de vistas HTML.
+ * - spring-boot-starter-web → para manejar rutas tipo GET.
+ */
 
 @Controller
 public class ViewController {
 
-    private final UsuarioRepository repo;
-
-    public ViewController(UsuarioRepository repo) {
-        this.repo = repo;
-    }
-
-    /**
-     * 1) Al entrar a la raíz "/", muestro la página de inicio:
-     */
+    // 1. Página principal
     @GetMapping("/")
     public String homePage() {
-        // Aquí devolvemos la plantilla "/"
         return "US_Inicio";
     }
 
-    /**
-     * 2) GET /login: muestro la página de login.
-     */
+    // 2. Autenticación: login y registro
     @GetMapping("/login")
     public String loginPage() {
         return "US_Login";
     }
 
-    /**
-     * 3) GET /register: muestro la página de registro.
-     */
     @GetMapping("/register")
     public String registerPage() {
         return "US_Register";
     }
 
-    /**
-     * 4) GET /tablaUsuarios: muestro la tabla de usuarios (como antes).
-     */
-    @GetMapping("/tablaUsuarios")
-    public String tablaUsuarios(Model model) {
-        List<Usuario> usuarios = repo.findAll();
-        model.addAttribute("usuarios", usuarios);
-        return "tablaUsuarios";
+    // 3. Vista de datos del usuario
+    @GetMapping("/datos-usuario")
+    public String datosUsuario() {
+        return "US_DatosUsuario";
+    }
+
+    // 4. Planes y precios
+    @GetMapping("/precios")
+    public String mostrarPrecios() {
+        return "VA_Precios";
+    }
+
+    @GetMapping("/planes")
+    public String planes() {
+        return "US_PlanesYPrecios";
+    }
+
+    // 5. Páginas de pago por tipo
+    @GetMapping("/pago1")
+    public String pagoAPage() {
+        return "US_PagoA";
     }
 
     @GetMapping("/pago2")
@@ -70,36 +68,48 @@ public class ViewController {
         return "US_PagoC";
     }
 
-    @GetMapping("/datos-usuario")
-    public String datosUsuario() {
-        return "US_DatosUsuario"; // sin .html
-    }
-
-    @GetMapping("/precios")
-    public String mostrarPrecios() {
-        return "VA_Precios"; // sin .html, Spring buscará en templates/VA_Precios.html
-    }
-
-    @GetMapping("/planes")
-    public String planes() {
-        return "US_PlanesYPrecios";
-    }
-
-    @GetMapping("/pago1")
-    public String pagoAPage() {
-        return "US_PagoA";
-    }
-
+    // 6. Suscripciones y resumen de boletas
     @GetMapping("/suscripciones")
     public String vistaSuscripciones() {
         return "VA_Suscripciones";
     }
 
-    @GetMapping("/admin-panel")
-    public String mostrarPanelAdmin() {
-        return "VA_Inicio"; // corresponde a templates/miVistaAdmin.html
+    @GetMapping("/VistaSuscripciones")
+    public String resumenBoletas() {
+        return "VA_ResumenBoletas";
     }
 
-    // … si tienes más páginas (por ejemplo, US_Anuncios, US_PlanesYPrecios, etc.),
-    // solo agrega más @GetMapping que devuelvan el nombre de la plantilla.
+    // 7. Panel y administración
+    @GetMapping("/admin-panel")
+    public String mostrarPanelAdmin() {
+        return "VA_Inicio";
+    }
+
+    @GetMapping("/TablaUsuarios")
+    public String tablaUsuarios() {
+        return "tablaUsuarios";
+    }
+
+    // 8. Eventos y asistencias
+    @GetMapping("/eventos")
+    public String eventosUsuario() {
+        return "US_Eventos";
+    }
+
+    @GetMapping("/eventosAdmin")
+    public String eventosAdmin() {
+        return "VA_Eventos";
+    }
+
+    @GetMapping("/asistencias")
+    public String asistencias() {
+        return "VA_Asistencias";
+    }
+
+    // 9. Anuncios
+    @GetMapping("/Anuncios")
+    public String anuncios() {
+        return "US_Anuncios";
+    }
 }
+

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Eventos del Gimnasio</title>
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&family=Poppins&family=Raleway&display=swap"
+    rel="stylesheet">
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+  <link href="assets/css/main.css" rel="stylesheet">
+</head>
+
+<body class="index-page">
+  <header id="header" class="header d-flex align-items-center sticky-top">
+    <div class="container-fluid container-xl position-relative d-flex align-items-center">
+      <a href="/" class="logo d-flex align-items-center me-auto">
+        <img src="imgWeb/logo.png" alt="">
+      </a>
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="/" class="active">Inicio</a></li>
+          <li><a href="/eventos" class="active">Eventos</a></li>
+          <li><a href="/datos-usuario" class="active">Datos Usuario</a></li>         
+          <li><a href="/Anuncios" class="active">Contenido</a></li>
+          <li><a href="/planes" class="active">Planes y Precios</a></li>
+          <li><a href="/admin-panel" class="active">Admin</a></li>
+        </ul>
+        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      </nav>
+      <a id="btnLogin" class="btn-getstarted" href="/login" style="display: none;">Login</a>
+      <a id="btnLogout" class="btn-getstarted" href="#" onclick="cerrarSesion()" style="display: none;">Cerrar
+        Sesión</a>
+    </div>
+  </header>
+
+  <div class="page-title light-background">
+      <div class="container d-lg-flex justify-content-between align-items-center">
+        <h1 class="mb-2 mb-lg-0">Eventos</h1>
+      </div>
+    </div>
+
+  <main class="container mt-5">
+    <div id="alerta" class="alert d-none" role="alert"></div>
+    <div class="row" id="contenedor-eventos">
+      <!-- Eventos se cargan aquí dinámicamente -->
+    </div>
+  </main>
+
+  <footer id="footer" class="footer dark-background">
+    <div class="container footer-top">
+      <div class="row gy-4">
+        <div class="col-lg-4 col-md-6 footer-about">
+          <a class="logo d-flex align-items-center">
+            <span class="sitename">AtlanticGym</span>
+          </a>
+          <div class="social-links d-flex mt-4">
+            <a href="https://www.tiktok.com/@atlantic.gym8"><i class="fab fa-tiktok"></i></a>
+            <a href="https://www.facebook.com/Antlanticgym"><i class="bi bi-facebook"></i></a>
+            <a href="https://www.instagram.com/atlanticgm/"><i class="bi bi-instagram"></i></a>
+          </div>
+        </div>
+        <div class="col-lg-4 col-md-6 footer-about">
+          <a class="logo d-flex align-items-center">
+            <span class="sitename">Horario de Antecion</span>
+          </a>
+          <div class="footer-contact pt-3">
+            <p>Lunes a Sabado 6:00 AM - 10:00 PM </p>
+            <p>Domingo 7:00 AM - 1:00 PM</p>
+          </div>
+        </div>
+        <div class="col-lg-4 col-md-6 footer-about">
+          <a class="logo d-flex align-items-center">
+            <span class="sitename">Contacto</span>
+          </a>
+          <div class="footer-contact pt-3">
+            <p>Numero telefonico: +51 964 305 001</p>
+            <p>Correo: atlanticgym29@gmail.com</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="container copyright text-center mt-4">
+      <p>© <span>Copyright</span> <strong class="px-1 sitename">AtlanticGym</strong> <span>Todos los derechos
+          reservados.</span></p>
+      <div class="credits">
+        Diseñado por <a href="#">Grupo2</a> Publicado en <a href="#"> Universidad UTP</a> Sede <a href="#"> Lima
+          Norte</a>
+      </div>
+    </div>
+  </footer>
+
+
+  <script>
+    async function cargarEventos() {
+      const documento = localStorage.getItem('dniUsuario');
+      if (!documento) {
+        alert("No has iniciado sesión. Redirigiendo al login...");
+        window.location.href = "/login";
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/eventos?documento=${documento}`);
+        if (!response.ok) throw new Error('No se pudieron obtener los eventos');
+
+        const eventos = await response.json();
+        const contenedor = document.getElementById('contenedor-eventos');
+        contenedor.innerHTML = '';
+
+        if (eventos.length === 0) {
+          contenedor.innerHTML = '<p class="text-center">No hay eventos disponibles por ahora.</p>';
+          return;
+        }
+
+        eventos.forEach(evento => {
+          const tarjeta = document.createElement('div');
+          tarjeta.className = 'col-md-4 mb-4';
+
+          // Formatear la fecha como yyyy-mm-dd
+          const fecha = evento.fechaEvento.split('T')[0];
+
+          const botonAccion = evento.inscrito
+            ? `<button class="btn btn-danger w-100" onclick="desinscribirse(${evento.idEvento})">Anular inscripción</button>`
+            : `<button class="btn btn-success w-100" ${evento.cupos <= 0 ? 'disabled' : ''} onclick="inscribirse(${evento.idEvento})">
+                ${evento.cupos > 0 ? 'Inscribirse' : 'Evento lleno'}
+              </button>`;
+
+          tarjeta.innerHTML = `
+            <div class="card h-100 shadow">
+              <div class="card-body">
+                <h5 class="card-title">${evento.titulo}</h5>
+                <p class="card-text">${evento.descripcion || 'Sin descripción'}</p>
+                <p><strong>Fecha:</strong> ${fecha}</p>
+                <p><strong>Cupos disponibles:</strong> ${evento.cupos}</p>
+                ${botonAccion}
+              </div>
+            </div>
+          `;
+
+          contenedor.appendChild(tarjeta);
+        });
+      } catch (error) {
+        alert("Error al cargar eventos: " + error.message);
+      }
+    }
+
+    async function inscribirse(idEvento) {
+      const documento = localStorage.getItem('dniUsuario');
+      try {
+        const res = await fetch(`/api/asistencias?idEvento=${idEvento}&documento=${documento}`, {
+          method: 'POST'
+        });
+        const msg = await res.text();
+        mostrarAlerta(msg, res.ok);
+        cargarEventos();
+      } catch (err) {
+        mostrarAlerta("Error al inscribirse", false);
+      }
+    }
+
+    async function desinscribirse(idEvento) {
+      const documento = localStorage.getItem('dniUsuario');
+      try {
+        const res = await fetch(`/api/asistencias/${idEvento}/${documento}`, {
+          method: 'DELETE'
+        });
+        const msg = await res.text();
+        mostrarAlerta(msg, res.ok);
+        cargarEventos();
+      } catch (err) {
+        mostrarAlerta("Error al anular inscripción", false);
+      }
+    }
+
+    function mostrarAlerta(mensaje, exito) {
+      const alerta = document.getElementById('alerta');
+      alerta.className = `alert ${exito ? 'alert-success' : 'alert-danger'}`;
+      alerta.textContent = mensaje;
+      alerta.classList.remove('d-none');
+    }
+
+    window.addEventListener('DOMContentLoaded', cargarEventos);
+  </script>
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/php-email-form/validate.js"></script>
+  <script src="assets/vendor/aos/aos.js"></script>
+  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
+  <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+  <script src="assets/vendor/purecounter/purecounter_vanilla.js"></script>
+  <script src="assets/vendor/waypoints/noframework.waypoints.js"></script>
+  <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
+  <script src="assets/js/main.js"></script>
+  <script src="assets/js/session.js"></script>
+</body>
+
+</html>

@@ -14,6 +14,21 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
+/**
+ * Controlador encargado de gestionar la autenticación y administración de usuarios.
+ * 
+ * Funciones principales:
+ * - Registro de nuevos usuarios con validación de DNI y encriptación de contraseñas.
+ * - Autenticación (login) de usuarios con verificación de credenciales.
+ * - CRUD completo de usuarios (crear, consultar, actualizar, eliminar).
+ * 
+ * Tecnologías relacionadas:
+ * - Spring Web (para exponer los endpoints REST).
+ * - Spring Security Crypto (para encriptar contraseñas con BCrypt).
+ * - Spring Data JPA (para acceder y manipular los datos de usuario).
+ * - Commons Validator (para validar que el DNI tenga 8 dígitos).
+ */
+
 @CrossOrigin(origins = "*")
 @RestController
 public class AuthController {
@@ -22,12 +37,18 @@ public class AuthController {
     private final TipoUsuarioRepository tipoRepo;
     private final BCryptPasswordEncoder passwordEncoder;
 
+    // Constructor que inyecta dependencias necesarias para el controlador
     public AuthController(UsuarioRepository repo, TipoUsuarioRepository tipoRepo) {
         this.repo = repo;
         this.tipoRepo = tipoRepo;
         this.passwordEncoder = new BCryptPasswordEncoder();
     }
 
+    /**
+     * Registro de usuario
+     * Valida que el DNI tenga 8 dígitos y que el usuario no exista.
+     * Encripta la contraseña antes de guardarla.
+     */
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
         if (!DocumentoValidator.esDNIValido(req.getDocumento())) {
@@ -55,14 +76,16 @@ public class AuthController {
         nuevo.setApellidos(req.getApellidos());
         nuevo.setTelefono(req.getTelefono());
         nuevo.setTipoUsuario(tipoOpt.get());
-
-        String hashedPassword = passwordEncoder.encode(req.getPassword());
-        nuevo.setPassword(hashedPassword);
+        nuevo.setPassword(passwordEncoder.encode(req.getPassword()));
 
         repo.save(nuevo);
         return ResponseEntity.ok("Usuario registrado exitosamente.");
     }
 
+    /**
+     * Login básico de usuario
+     * Compara la contraseña ingresada con la almacenada encriptada
+     */
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
         Optional<Usuario> usrOpt = repo.findById(req.getDocumento());
@@ -80,6 +103,9 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenciales inválidas.");
     }
 
+    /**
+     * Consulta de usuario por DNI
+     */
     @GetMapping("/api/usuarios/{dni}")
     public ResponseEntity<?> getUsuarioByDni(@PathVariable String dni) {
         Optional<Usuario> usrOpt = repo.findById(dni);
@@ -100,6 +126,9 @@ public class AuthController {
         }
     }
 
+    /**
+     * Eliminación de usuario por DNI
+     */
     @DeleteMapping("/api/usuarios/{dni}")
     public ResponseEntity<?> eliminarUsuario(@PathVariable String dni) {
         if (repo.existsById(dni)) {
@@ -110,6 +139,9 @@ public class AuthController {
         }
     }
 
+    /**
+     * Listado general de usuarios (para tabla de usuarios)
+     */
     @GetMapping("/api/usuarios")
     public List<Map<String, Object>> listarUsuarios() {
         List<Usuario> usuarios = repo.findAll();
@@ -121,13 +153,17 @@ public class AuthController {
             map.put("nombres", u.getNombres());
             map.put("apellidos", u.getApellidos());
             map.put("telefono", u.getTelefono());
-            map.put("rango", u.getTipoUsuario().getDescripcion()); // 👈 nombre, no ID
+            map.put("rango", u.getTipoUsuario().getDescripcion()); // se muestra descripción, no ID
             result.add(map);
         }
 
         return result;
     }
 
+    /**
+     * Actualización de usuario
+     * Permite modificar nombres, apellidos, teléfono, contraseña y tipo
+     */
     @PutMapping("/api/usuarios")
     public ResponseEntity<?> updateUsuario(@RequestBody Usuario updateRequest) {
         Optional<Usuario> usrOpt = repo.findById(updateRequest.getDocumento());
@@ -145,11 +181,9 @@ public class AuthController {
                 existingUser.setTelefono(updateRequest.getTelefono());
             }
             if (updateRequest.getPassword() != null && !updateRequest.getPassword().isEmpty()) {
-                String hashedPassword = passwordEncoder.encode(updateRequest.getPassword());
-                existingUser.setPassword(hashedPassword);
+                existingUser.setPassword(passwordEncoder.encode(updateRequest.getPassword()));
             }
 
-            // 👉 actualizar tipo de usuario
             if (updateRequest.getTipoUsuario() != null) {
                 Optional<TipoUsuario> tipoOpt = tipoRepo.findById(updateRequest.getTipoUsuario().getId());
                 tipoOpt.ifPresent(existingUser::setTipoUsuario);

@@ -9,6 +9,21 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
+/**
+ * Controlador encargado de la gestión de planes de membresía del gimnasio.
+ *
+ * Funciones principales:
+ * - Listar todos los planes disponibles.
+ * - Consultar, actualizar y eliminar planes por ID.
+ *
+ * Dependencias del pom utilizadas:
+ * - spring-boot-starter-web → para crear endpoints REST.
+ * - spring-boot-starter-data-jpa → para operaciones con la base de datos (PlanRepository).
+ *
+ * Relaciones:
+ * - Utiliza PlanRepository para acceder a las entidades Plan.
+ */
+
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/planes")
@@ -17,7 +32,10 @@ public class PlanController {
     @Autowired
     private PlanRepository planRepository;
 
-    // Tu método para actualizar el plan
+    /**
+     * Actualiza un plan existente dado su ID.
+     * Solo se realiza si el plan existe.
+     */
     @PutMapping("/{id}")
     public ResponseEntity<?> actualizarPlan(@PathVariable int id, @RequestBody Plan planActualizado) {
         Optional<Plan> planOpt = planRepository.findById(id);
@@ -35,6 +53,9 @@ public class PlanController {
         }
     }
 
+    /**
+     * Elimina un plan si existe en base de datos.
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminarPlan(@PathVariable int id) {
         if (planRepository.existsById(id)) {
@@ -45,16 +66,22 @@ public class PlanController {
         }
     }
 
+    /**
+     * Lista todos los planes de membresía disponibles.
+     */
     @GetMapping
     public ResponseEntity<?> listarPlanes() {
         return ResponseEntity.ok(planRepository.findAll());
     }
 
+    /**
+     * Devuelve un plan específico por su ID.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<Plan> obtenerPlanPorId(@PathVariable int id) {
         return planRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-
 }
+
